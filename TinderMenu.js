@@ -33,9 +33,9 @@ class TinderMenu extends Component {
 
     if (offset) {
       let page = Math.round(offset.x / SCREEN_WIDTH);
-
+      this.setState({ animated: offset.x });
       if (currentPage !== page) {
-        this.setState({ page }, () => this.doAnimate());
+        this.setState({ page });
       }
     }
   };
@@ -51,8 +51,8 @@ class TinderMenu extends Component {
   renderMenuItems = () => {
     const { slides, page, animated } = this.state;
     const animatedScale = animated.interpolate({
-      inputRange: [0, 1],
-      outputRange: [1, 0.5]
+      inputRange: [0, SCREEN_WIDTH],
+      outputRange: [1, 1.5]
     });
 
     return slides.map((slide, index) => {
@@ -95,7 +95,15 @@ class TinderMenu extends Component {
           style={styles.slides}
           horizontal
           pagingEnabled
-          onScroll={e => this.onScroll(e)}
+          onScroll={Animated.event([
+            {
+              nativeEvent: {
+                contentOffset: {
+                  x: this.state.animated
+                }
+              }
+            }
+          ])}
           scrollEventThrottle={16}
         >
           {this.renderSlidesItems()}
