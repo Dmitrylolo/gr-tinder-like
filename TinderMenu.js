@@ -28,40 +28,38 @@ class TinderMenu extends Component {
   }
 
   onScroll = e => {
-    const { page: currentPage } = this.state;
-    let offset = e.nativeEvent.contentOffset;
+    const { page: currentPage, animated } = this.state;
+    let offsetX = e.nativeEvent.contentOffset.x;
 
-    if (offset) {
-      let page = Math.round(offset.x / SCREEN_WIDTH);
-      this.setState({ animated: offset.x });
+    if (offsetX) {
+      let page = Math.round(offsetX / SCREEN_WIDTH);
+
+      animated.setValue(offsetX);
+
       if (currentPage !== page) {
-        this.setState({ page });
+        this.setState({ page }, () => animated.setValue(0));
       }
     }
   };
 
-  doAnimate = () => {
-    const { animated } = this.state;
-    Animated.timing(animated, {
-      toValue: 1,
-      duration: 1000
-    }).start(() => this.setState({ animated: new Animated.Value(0) }));
-  };
-
   renderMenuItems = () => {
     const { slides, page, animated } = this.state;
-    const animatedScale = animated.interpolate({
-      inputRange: [0, SCREEN_WIDTH],
+    const pageWidth = SCREEN_WIDTH * page;
+    const growScale = animated.interpolate({
+      inputRange: [0, SCREEN_WIDTH + pageWidth],
       outputRange: [1, 1.5]
+    });
+    const returnScale = animated.interpolate({
+      inputRange: [SCREEN_WIDTH * page, SCREEN_WIDTH + pageWidth],
+      outputRange: [1.5, 1]
     });
 
     return slides.map((slide, index) => {
-      console.log('animatedScale', animatedScale);
       return (
         <Animated.View
           style={[
             styles.iconContainer,
-            { transform: index === page ? [{ scale: animatedScale }] : [] }
+            { transform: index === page ? [{ scale: growScale }] : [] }
           ]}
           key={slide.id.toString()}
         >
@@ -95,15 +93,7 @@ class TinderMenu extends Component {
           style={styles.slides}
           horizontal
           pagingEnabled
-          onScroll={Animated.event([
-            {
-              nativeEvent: {
-                contentOffset: {
-                  x: this.state.animated
-                }
-              }
-            }
-          ])}
+          onScroll={e => this.onScroll(e)}
           scrollEventThrottle={16}
         >
           {this.renderSlidesItems()}
